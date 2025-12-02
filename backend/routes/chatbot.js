@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import Chat from "../models/Chat.js";
+
 const router = express.Router();
-const Chat = require("../models/Chat");
 
 router.post("/", async (req, res) => {
   const { message } = req.body;
@@ -15,4 +16,4 @@ router.post("/", async (req, res) => {
   res.json({ reply });
 });
 
-module.exports = router;
+export default router;

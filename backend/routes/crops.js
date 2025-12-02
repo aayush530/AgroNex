@@ -1,6 +1,7 @@
-const express = require("express");
+import express from "express";
+import Crop from "../models/Crop.js";
+
 const router = express.Router();
-const Crop = require("../models/Crop");
 
 router.post("/recommend", async (req, res) => {
   const { ph, soilType, season } = req.body;
@@ -15,4 +16,4 @@ router.post("/recommend", async (req, res) => {
   res.json({ crops: crops.length ? crops.map(c => c.name) : ["No suitable crop found"] });
 });
 
-module.exports = router;
+export default router;

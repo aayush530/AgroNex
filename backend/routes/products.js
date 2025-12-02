@@ -1,10 +1,11 @@
-const express = require("express");
+import express from "express";
+import Product from "../models/Product.js";
+
 const router = express.Router();
-const Product = require("../models/Product");
 
 router.get("/", async (req, res) => {
   const products = await Product.find();
   res.json({ products });
 });
 
-module.exports = router;
+export default router;
