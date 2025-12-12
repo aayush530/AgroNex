@@ -8,6 +8,7 @@ export default function Chatbot() {
     { id: 1, from: "bot", text: "Hello! I'm Farm Helper. Ask me about crops, pests, or dosage." }
   ]);
   const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
   const idRef = useRef(2);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -16,12 +17,26 @@ export default function Chatbot() {
     const userMsg: Msg = { id: idRef.current++, from: "user", text: text.trim() };
     setMessages(prev => [...prev, userMsg]);
     setText("");
-
-    // simple simulated bot reply (replace with API)
-    setTimeout(() => {
-      const reply: Msg = { id: idRef.current++, from: "bot", text: `Simulated reply: I recommend checking local extension services for ${userMsg.text}.` };
-      setMessages(prev => [...prev, reply]);
-    }, 700);
+    // send to backend API
+    const API_BASE = ((import.meta as any)?.env?.VITE_API_BASE as string) || "http://localhost:5000";
+    setLoading(true);
+    fetch(`${API_BASE}/api/chatbot`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMsg.text })
+    })
+      .then(async res => {
+        const data = await res.json();
+        const replyText = data?.reply || data?.message || "Sorry, no reply.";
+        const reply: Msg = { id: idRef.current++, from: "bot", text: replyText };
+        setMessages(prev => [...prev, reply]);
+      })
+      .catch(err => {
+        const reply: Msg = { id: idRef.current++, from: "bot", text: "Sorry, something went wrong while contacting the server." };
+        setMessages(prev => [...prev, reply]);
+        console.error("Chatbot fetch error:", err);
+      })
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -47,8 +62,8 @@ export default function Chatbot() {
           </div>
 
           <div className="p-3 border-t flex gap-3">
-            <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} placeholder="Type your message..." className="flex-1 p-2 border rounded" />
-            <button onClick={send} className="bg-green-600 text-white px-4 py-2 rounded">Send</button>
+            <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} placeholder="Type your message..." className="flex-1 p-2 border rounded" disabled={loading} />
+            <button onClick={send} className="bg-green-600 text-white px-4 py-2 rounded" disabled={loading}>{loading ? 'Sending...' : 'Send'}</button>
           </div>
         </div>
       </main>
